@@ -11,6 +11,7 @@ const {
 const ytdl = require('ytdl-core');
 const { google } = require('googleapis');
 var idMusicas = []
+var titleSongs = []
 var option;
 var select = 0;
 
@@ -32,17 +33,24 @@ client.once('disconnect', () => {
 //END BASICOS
 
 client.on('message', async message => {
+
 	if (message.author.bot) return;
 	if (!message.content.startsWith(prefix)) return;
 
 	const serverQueue = queue.get(message.guild.id);
 
 	if (message.content.startsWith(`${prefix}play`) ||
-		message.content.startsWith(`${prefix}p`)) {
-		search(message)
+		message.content.startsWith(`${prefix}p`) &&
+		(!message.content.startsWith(`${prefix}p http://www.youtube.com`))) {
+		idMusicas = []
+		titleSongs = []
+		search(message, serverQueue)
 		return;
 	} else if (message.content.startsWith(`${prefix}skip`)) {
 		skip(message, serverQueue);
+		return;
+	} else if (message.content.startsWith(`${prefix}p http://www.youtube.com`)) {
+		execute(message, serverQueue);
 		return;
 	} else if (message.content.startsWith(`${prefix}stop`)) {
 		stop(message, serverQueue);
@@ -54,8 +62,9 @@ client.on('message', async message => {
 
 
 
-async function search(message) {
-	const serverQueue = queue.get(message.guild.id);
+async function search(message, serverQueue) {
+
+
 	var res = null;
 	if (select == 0) {
 		const youtube = google.youtube({
@@ -71,8 +80,9 @@ async function search(message) {
 		console.log("=============")
 		for (var i = 0; i < 10; i++) {
 			console.log(`[${i + 1}] - ${res.data.items[i].snippet.title}`);
-			idMusicas.push(res.data.items[i]);
-			console.log(idMusicas[i].videoId);
+			idMusicas.push(res.data.items[i].id.videoId);
+			titleSongs.push(res.data.items[i].snippet.title);
+			console.log(idMusicas[i]);
 		}
 		console.log("- - - - -")
 
@@ -84,22 +94,23 @@ async function search(message) {
 		for (var i = 1; i < 10; i++) {
 			nomeMusicas = nomeMusicas + (`\n [${i + 1}] - ${res.data.items[i].snippet.title}`);
 		}
-		m.edit(nomeMusicas);
+		m.edit(`${nomeMusicas}`);
 	}
 
 	if (select == 0) {
-		message.channel.send('Digite o número da musica')
+		message.channel.send('\n Digite o número da musica')
 			.then(() => {
 				message.channel.awaitMessages(message => message.content, {
 					max: 1,
-					time: 5000,
+					time: 30000,
 					errors: ['time'],
 				})
 					.then((collected) => {
 						message.channel.send(`The collected message was: ${collected.first().content}`);
+						console.log(`=====================================${collected.first().content}`)
 						option = collected.first().content - 1
 						select = 1;
-						search(message)
+						search(message, serverQueue)
 					})
 					.catch(() => {
 						return;
@@ -108,79 +119,67 @@ async function search(message) {
 	} else if (select == 1) {
 		select = 0;
 		console.log(`opção = ${option}`);
-	}
 
-	if(idMusicas[option].id.videoId == undefined){
-		break;
-	}
-	const voiceChannel = message.member.voiceChannel;
-	if (!voiceChannel) return message.channel.send('You need to be in a voice channel to play music!');
-	const permissions = voiceChannel.permissionsFor(message.client.user);
-	if (!permissions.has('CONNECT') || !permissions.has('SPEAK')) {
-		return message.channel.send('I need the permissions to join and speak in your voice channel!');
-	};
-	
-	const songInfo = await ytdl.getInfo(`https://www.youtube.com/watch?v=${idMusicas[option].id.videoId}`);
-	const song = {
-		title: idMusicas[option].snippet.title,
-		url: songInfo.video_url,
-	};
 
-	if (!serverQueue) {
-		const queueContruct = {
-			textChannel: message.channel,
-			voiceChannel: voiceChannel,
-			connection: null,
-			songs: [],
-			volume: 3,
-			playing: true,
+
+
+		const voiceChannel = message.member.voiceChannel;
+		if (!voiceChannel) return message.channel.send('You need to be in a voice channel to play music!');
+		const permissions = voiceChannel.permissionsFor(message.client.user);
+		if (!permissions.has('CONNECT') || !permissions.has('SPEAK')) {
+			return message.channel.send('I need the permissions to join and speak in your voice channel!');
 		};
 
-		queue.set(message.guild.id, queueContruct);
 
-		queueContruct.songs.push(song);
+		const songInfo = await ytdl.getInfo(`https://www.youtube.com/watch?v=${idMusicas[option]}`);
+		const song = {
+			title: titleSongs[option],
+			url: songInfo.video_url,
+		};
 
-		try {
-			var connection = await voiceChannel.join();
-			queueContruct.connection = connection;
-			play(message.guild, queueContruct.songs[0]);
-		} catch (err) {
-			console.log(err);
-			queue.delete(message.guild.id);
-			return message.channel.send(err);
+
+		option = null;
+		select = 0;
+		idMusicas = []
+		titleSongs = []
+
+		if (!serverQueue) {
+			const queueContruct = {
+				textChannel: message.channel,
+				voiceChannel: voiceChannel,
+				connection: null,
+				songs: [],
+				volume: 3,
+				playing: true,
+			};
+
+			queue.set(message.guild.id, queueContruct);
+
+			queueContruct.songs.push(song);
+
+
+
+			try {
+				var connection = await voiceChannel.join();
+				queueContruct.connection = connection;
+				play(message.guild, queueContruct.songs[0]);
+			} catch (err) {
+				console.log(err);
+				queue.delete(message.guild.id);
+				return message.channel.send(err);
+			}
+		} else {
+			serverQueue.songs.push(song);
+			console.log(serverQueue.songs);
+			return message.channel.send(`${song.title} has been added to the queue!`);
+
 		}
-	} else {
-		serverQueue.songs.push(song);
-		console.log(serverQueue.songs);
-		return message.channel.send(`${song.title} has been added to the queue!`);
 	}
-	option = null;
+	console.log(idMusicas)
 };
 
 
 //QUEUE
-function passUrl(idVideo) {
-	client.on(idVideo, async message => {
-		//if (message.author.bot) return;
-		if (!message.content.startsWith(prefix)) return;
-
-		const serverQueue = queue.get(message.guild.id);
-
-		if (message.content.startsWith(`${prefix}play`) ||
-			message.content.startsWith(`${prefix}p`)) {
-			execute(message, serverQueue);
-			return;
-		} else if (message.content.startsWith(`${prefix}skip`)) {
-			skip(message, serverQueue);
-			return;
-		} else if (message.content.startsWith(`${prefix}stop`)) {
-			stop(message, serverQueue);
-			return;
-		} else {
-			message.channel.send('You need to enter a valid command!')
-		}
-	});
-}
 
 async function execute(message, serverQueue) {
 	const args = message.content.split(' ');
