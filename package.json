@@ -1,0 +1,22 @@
+{
+  "name": "botDiscord",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^11.5.1",
+    "ffmpeg-binaries": "^4.0.0",
+    "gapi": "0.0.3",
+    "gapi-client": "0.0.3",
+    "googleapis": "^39.2.0",
+    "opusscript": "0.0.6",
+    "xmlhttprequest": "^1.8.0",
+    "ytdl-core": "^0.29.3"
+  }
+}
