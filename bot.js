@@ -15,7 +15,6 @@ var titleSongs = []
 var option;
 var select = 0;
 
-
 // Initialize the API client library
 client.on('ready', () => {
 	console.log(`Logado como ${client.user.username}!`)
@@ -60,11 +59,7 @@ client.on('message', async message => {
 	}
 });
 
-
-
 async function search(message, serverQueue) {
-
-
 	var res = null;
 	if (select == 0) {
 		const youtube = google.youtube({
@@ -86,7 +81,6 @@ async function search(message, serverQueue) {
 		}
 		console.log("- - - - -")
 
-
 		const m = await message.channel.send("..");
 		const args = message.content.split('=p');
 		var nomeMusicas = `\n Músicas de :${args[1]} 
@@ -102,12 +96,12 @@ async function search(message, serverQueue) {
 			.then(() => {
 				message.channel.awaitMessages(message => message.content, {
 					max: 1,
-					time: 30000,
+					time: 300000,
 					errors: ['time'],
 				})
 					.then((collected) => {
-						message.channel.send(`The collected message was: ${collected.first().content}`);
-						console.log(`=====================================${collected.first().content}`)
+						message.channel.send(`Esolheu musica: ${collected.first().content}`);
+						console.log(`==${collected.first().content}`)
 						option = collected.first().content - 1
 						select = 1;
 						search(message, serverQueue)
@@ -120,9 +114,6 @@ async function search(message, serverQueue) {
 		select = 0;
 		console.log(`opção = ${option}`);
 
-
-
-
 		const voiceChannel = message.member.voiceChannel;
 		if (!voiceChannel) return message.channel.send('You need to be in a voice channel to play music!');
 		const permissions = voiceChannel.permissionsFor(message.client.user);
@@ -130,13 +121,11 @@ async function search(message, serverQueue) {
 			return message.channel.send('I need the permissions to join and speak in your voice channel!');
 		};
 
-
 		const songInfo = await ytdl.getInfo(`https://www.youtube.com/watch?v=${idMusicas[option]}`);
 		const song = {
 			title: titleSongs[option],
 			url: songInfo.video_url,
 		};
-
 
 		option = null;
 		select = 0;
@@ -157,8 +146,6 @@ async function search(message, serverQueue) {
 
 			queueContruct.songs.push(song);
 
-
-
 			try {
 				var connection = await voiceChannel.join();
 				queueContruct.connection = connection;
@@ -178,9 +165,7 @@ async function search(message, serverQueue) {
 	console.log(idMusicas)
 };
 
-
 //QUEUE
-
 async function execute(message, serverQueue) {
 	const args = message.content.split(' ');
 
