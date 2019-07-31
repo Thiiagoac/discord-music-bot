@@ -40,7 +40,7 @@ client.on('message', async message => {
 
 	if (message.content.startsWith(`${prefix}play`) ||
 		message.content.startsWith(`${prefix}p`) &&
-		(!message.content.startsWith(`${prefix}p http://www.youtube.com`))) {
+		(!message.content.startsWith(`${prefix}p https://www.youtube.com`))) {
 		idMusicas = []
 		titleSongs = []
 		search(message, serverQueue)
@@ -48,7 +48,7 @@ client.on('message', async message => {
 	} else if (message.content.startsWith(`${prefix}skip`)) {
 		skip(message, serverQueue);
 		return;
-	} else if (message.content.startsWith(`${prefix}p http://www.youtube.com`)) {
+	} else if (message.content.startsWith(`${prefix}p https://www.youtube.com`)) {
 		execute(message, serverQueue);
 		return;
 	} else if (message.content.startsWith(`${prefix}stop`)) {
