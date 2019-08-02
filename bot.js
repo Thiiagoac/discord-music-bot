@@ -91,7 +91,7 @@ async function search(message, serverQueue) {
 	}
 
 	if (select == 0) {
-		message.channel.send('\n Digite o número da musica')
+		message.channel.send('\n\n Digite o número da musica:')
 			.then(() => {
 				message.channel.awaitMessages(message => message.content, {
 					max: 1,
@@ -157,7 +157,7 @@ async function search(message, serverQueue) {
 		} else {
 			serverQueue.songs.push(song);
 			console.log(serverQueue.songs);
-			return message.channel.send(`${song.title} has been added to the queue!`);
+			return message.channel.send(`${song.title} adicionado na fila!`);
 
 		}
 	}
@@ -207,7 +207,7 @@ async function execute(message, serverQueue) {
 	} else {
 		serverQueue.songs.push(song);
 		console.log(serverQueue.songs);
-		return message.channel.send(`${song.title} has been added to the queue!`);
+		return message.channel.send(`Link adicionado na fila`);
 	}
 
 }
